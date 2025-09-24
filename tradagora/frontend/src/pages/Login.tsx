@@ -38,7 +38,7 @@ const Login: React.FC = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:5001/api/auth/google';
+    window.location.href = 'https://takasbende.onrender.com/api/auth/google';
   };
 
   return (
