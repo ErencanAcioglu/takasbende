@@ -23,6 +23,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
 
 interface Listing {
   id: string;
@@ -69,7 +70,7 @@ const Home: React.FC = () => {
       if (location) params.append('location', location);
 
       const response = await axios.get(
-        `http://localhost:5001/api/listings?${params.toString()}`
+        `${API_ENDPOINTS.LISTINGS.BASE}?${params.toString()}`
       );
       setListings(response.data.listings);
     } catch (error) {
@@ -146,7 +147,7 @@ const Home: React.FC = () => {
               lineHeight: 1.2,
             }}
           >
-            Tradagora
+            takasbende
           </Typography>
         </Box>
         <Typography 

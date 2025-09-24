@@ -92,7 +92,7 @@ const Register: React.FC = () => {
                 fontSize: { xs: '1.5rem', sm: '2rem' },
               }}
             >
-              Tradagora
+              takasbende
             </Typography>
             <Typography 
               variant="h5" 

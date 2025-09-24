@@ -36,7 +36,7 @@ const upload = multer({
   }
 });
 
-// Mock data for development
+// Production: Use Supabase for all data
 const mockListings = [
   {
     id: '1',

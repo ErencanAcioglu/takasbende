@@ -20,7 +20,7 @@ const mockListings = [
     want_item: 'MacBook Air M2',
     want_description: 'MacBook Air M2 13 inch, 8GB RAM, 256GB SSD',
     is_active: true,
-    user_id: '1',
+    user_id: '550e8400-e29b-41d4-a716-446655440001',
     created_at: new Date().toISOString(),
     user: {
       full_name: 'Ahmet Yılmaz',
@@ -43,7 +43,7 @@ const mockListings = [
     want_item: 'Adidas Ultraboost',
     want_description: 'Adidas Ultraboost 22, 42 numara',
     is_active: true,
-    user_id: '2',
+    user_id: '550e8400-e29b-41d4-a716-446655440002',
     created_at: new Date(Date.now() - 86400000).toISOString(),
     user: {
       full_name: 'Elif Demir',

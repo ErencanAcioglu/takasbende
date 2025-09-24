@@ -8,7 +8,9 @@ import {
   Box,
   Link,
   Alert,
+  Divider,
 } from '@mui/material';
+import { Google } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 
@@ -33,6 +35,10 @@ const Login: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    window.location.href = 'http://localhost:5001/api/auth/google';
   };
 
   return (
@@ -64,7 +70,7 @@ const Login: React.FC = () => {
                 fontSize: { xs: '1.5rem', sm: '2rem' },
               }}
             >
-              Tradagora
+              takasbende
             </Typography>
             <Typography 
               variant="h5" 
@@ -118,6 +124,23 @@ const Login: React.FC = () => {
             >
               {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
             </Button>
+
+            <Divider sx={{ my: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                veya
+              </Typography>
+            </Divider>
+
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<Google />}
+              onClick={handleGoogleLogin}
+              sx={{ mb: 2 }}
+            >
+              Google ile Giriş Yap
+            </Button>
+
             <Box textAlign="center">
               <Typography variant="body2">
                 Hesabın yok mu?{' '}

@@ -7,9 +7,15 @@ import {
   Typography,
   Box,
   Alert,
+  Card,
+  CardContent,
+  Divider,
+  IconButton,
 } from '@mui/material';
+import { Lock, Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
 
 interface UserProfile {
   id: string;
@@ -25,6 +31,12 @@ const Profile: React.FC = () => {
     fullName: '',
     phone: '',
   });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -37,7 +49,7 @@ const Profile: React.FC = () => {
 
   const fetchProfile = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/users/profile');
+      const response = await axios.get(API_ENDPOINTS.USERS.PROFILE);
       const userProfile = response.data.user;
       setProfile(userProfile);
       setFormData({
@@ -58,6 +70,13 @@ const Profile: React.FC = () => {
     });
   };
 
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPasswordData({
+      ...passwordData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -65,11 +84,47 @@ const Profile: React.FC = () => {
     setSaving(true);
 
     try {
-      await axios.put('http://localhost:5001/api/users/profile', formData);
+      await axios.put(API_ENDPOINTS.USERS.PROFILE, formData);
       setSuccess('Profil başarıyla güncellendi');
       fetchProfile(); // Refresh profile data
     } catch (err: any) {
       setError(err.response?.data?.error || 'Profil güncellenirken hata oluştu');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError('Yeni şifreler eşleşmiyor');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setError('Yeni şifre en az 6 karakter olmalıdır');
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      await axios.put(API_ENDPOINTS.AUTH.PROFILE.replace('/profile', '/change-password'), {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
+      setSuccess('Şifre başarıyla değiştirildi');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+      setShowPasswordForm(false);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Şifre değiştirilirken hata oluştu');
     } finally {
       setSaving(false);
     }
@@ -169,6 +224,89 @@ const Profile: React.FC = () => {
               </Button>
             </Box>
           </Box>
+
+          <Divider sx={{ my: 4 }} />
+
+          {/* Password Change Section */}
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Box display="flex" alignItems="center" mb={2}>
+                <Lock sx={{ mr: 1 }} />
+                <Typography variant="h6">Şifre Değiştir</Typography>
+              </Box>
+              
+              {!showPasswordForm ? (
+                <Button
+                  variant="outlined"
+                  onClick={() => setShowPasswordForm(true)}
+                  startIcon={<Lock />}
+                >
+                  Şifremi Değiştir
+                </Button>
+              ) : (
+                <Box component="form" onSubmit={handlePasswordSubmit}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <TextField
+                      required
+                      fullWidth
+                      id="currentPassword"
+                      label="Mevcut Şifre"
+                      name="currentPassword"
+                      type="password"
+                      value={passwordData.currentPassword}
+                      onChange={handlePasswordChange}
+                    />
+
+                    <TextField
+                      required
+                      fullWidth
+                      id="newPassword"
+                      label="Yeni Şifre"
+                      name="newPassword"
+                      type="password"
+                      value={passwordData.newPassword}
+                      onChange={handlePasswordChange}
+                      helperText="En az 6 karakter olmalıdır"
+                    />
+
+                    <TextField
+                      required
+                      fullWidth
+                      id="confirmPassword"
+                      label="Yeni Şifre Tekrar"
+                      name="confirmPassword"
+                      type="password"
+                      value={passwordData.confirmPassword}
+                      onChange={handlePasswordChange}
+                    />
+                  </Box>
+
+                  <Box display="flex" justifyContent="flex-end" gap={2} mt={3}>
+                    <Button
+                      variant="outlined"
+                      onClick={() => {
+                        setShowPasswordForm(false);
+                        setPasswordData({
+                          currentPassword: '',
+                          newPassword: '',
+                          confirmPassword: '',
+                        });
+                      }}
+                    >
+                      İptal
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      disabled={saving}
+                    >
+                      {saving ? 'Değiştiriliyor...' : 'Şifreyi Değiştir'}
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
         </Paper>
       </Box>
     </Container>

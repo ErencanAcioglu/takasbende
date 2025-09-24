@@ -29,6 +29,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
 
 interface Listing {
   id: string;
@@ -65,8 +66,10 @@ const ListingDetail: React.FC = () => {
   const navigate = useNavigate();
 
   const fetchListing = React.useCallback(async () => {
+    if (!id) return;
+    
     try {
-      const response = await axios.get(`http://localhost:5001/api/listings/${id}`);
+      const response = await axios.get(API_ENDPOINTS.LISTINGS.BY_ID(id));
       setListing(response.data.listing);
     } catch (error: any) {
       setError(error.response?.data?.error || 'İlan yüklenirken hata oluştu');
@@ -99,7 +102,7 @@ const ListingDetail: React.FC = () => {
 
   const handleSendOffer = async () => {
     try {
-      await axios.post('http://localhost:5001/api/offers', {
+      await axios.post(API_ENDPOINTS.OFFERS.BASE, {
         listingId: listing?.id,
         offerItem,
         offerDescription
@@ -116,7 +119,7 @@ const ListingDetail: React.FC = () => {
 
   const handleSendMessage = async () => {
     try {
-      await axios.post('http://localhost:5001/api/messages/start-from-listing', {
+      await axios.post(API_ENDPOINTS.MESSAGES.START_FROM_LISTING, {
         listingId: listing?.id,
         initialMessage
       });
@@ -137,9 +140,9 @@ const ListingDetail: React.FC = () => {
 
     try {
       if (isFavorite) {
-        await axios.delete(`http://localhost:5001/api/users/favorites/${id}`);
+        await axios.delete(`${API_ENDPOINTS.USERS.FAVORITES}/${id}`);
       } else {
-        await axios.post(`http://localhost:5001/api/users/favorites/${id}`);
+        await axios.post(`${API_ENDPOINTS.USERS.FAVORITES}/${id}`);
       }
       setIsFavorite(!isFavorite);
     } catch (error) {

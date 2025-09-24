@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const passport = require('passport');
+const session = require('express-session');
 require('dotenv').config();
 
 const app = express();
@@ -14,6 +16,18 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Session middleware for OAuth
+app.use(session({
+  secret: process.env.JWT_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // Set to true in production with HTTPS
+}));
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Serve static files (uploaded images)
 app.use('/uploads', express.static('uploads'));
 
@@ -21,7 +35,7 @@ app.use('/uploads', express.static('uploads'));
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
-    message: 'Tradagora API is running!',
+    message: 'takasbende API is running!',
     timestamp: new Date().toISOString()
   });
 });
@@ -29,20 +43,16 @@ app.get('/api/health', (req, res) => {
 // Auth routes
 app.use('/api/auth', require('./routes/auth'));
 
-// Listing routes
-app.use('/api/listings', require('./routes/listings'));
+// Production routes (Supabase)
+app.use('/api/listings', require('./routes/listings_production'));
+app.use('/api/offers', require('./routes/offers_production'));
+app.use('/api/messages', require('./routes/messages_production'));
 
 // Matching routes (AI)
 app.use('/api/matching', require('./routes/matching'));
 
 // User routes
 app.use('/api/users', require('./routes/users'));
-
-// Offer routes
-app.use('/api/offers', require('./routes/offers'));
-
-// Message routes
-app.use('/api/messages', require('./routes/messages'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -59,7 +69,7 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Tradagora API server running on port ${PORT}`);
+  console.log(`🚀 takasbende API server running on port ${PORT}`);
   console.log(`📱 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🤖 AI Matching: http://localhost:${PORT}/api/matching`);
 });

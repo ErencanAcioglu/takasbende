@@ -20,6 +20,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
 
 interface Listing {
   id: string;
@@ -72,7 +73,7 @@ const Dashboard: React.FC = () => {
 
   const fetchUserListings = async () => {
     try {
-      const response = await axios.get('http://localhost:5001/api/users/listings');
+      const response = await axios.get(API_ENDPOINTS.USERS.LISTINGS);
       setListings(response.data.listings);
     } catch (error) {
       console.error('Error fetching user listings:', error);
@@ -88,7 +89,7 @@ const Dashboard: React.FC = () => {
   const handleDeleteListing = async (listingId: string) => {
     if (window.confirm('Bu ilanı silmek istediğinizden emin misiniz?')) {
       try {
-        await axios.delete(`http://localhost:5001/api/listings/${listingId}`);
+        await axios.delete(API_ENDPOINTS.LISTINGS.BY_ID(listingId));
         setListings(listings.filter(listing => listing.id !== listingId));
       } catch (error) {
         console.error('Error deleting listing:', error);

@@ -21,6 +21,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
 
 const CreateListing: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -122,7 +123,7 @@ const CreateListing: React.FC = () => {
         submitData.append('images', image);
       });
 
-      await axios.post('http://localhost:5001/api/listings', submitData, {
+      await axios.post(API_ENDPOINTS.LISTINGS.BASE, submitData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

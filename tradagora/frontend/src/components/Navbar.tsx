@@ -83,7 +83,7 @@ const Navbar: React.FC = () => {
               }}
               onClick={() => navigate('/')}
             >
-              Tradagora
+              takasbende
             </Typography>
 
         {/* Mobile Menu Button */}
@@ -206,7 +206,7 @@ const Navbar: React.FC = () => {
       >
         <Box sx={{ p: 2 }}>
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>
-            Tradagora
+            takasbende
           </Typography>
           
           <List>
