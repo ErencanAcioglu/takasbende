@@ -12,6 +12,7 @@ import CreateListing from './pages/CreateListing';
 import ListingDetail from './pages/ListingDetail';
 import Profile from './pages/Profile';
 import VerifyEmail from './pages/VerifyEmail';
+import AuthCallback from './pages/AuthCallback';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const theme = createTheme({
@@ -126,6 +127,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route 
                 path="/dashboard" 
                 element={
