@@ -119,7 +119,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           'service_4z9z1jm',
           'template_35x4p5e',
           {
-            to_email: email,
+            email: email,
             full_name: fullName,
             verification_link: verificationLink,
           }
