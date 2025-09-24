@@ -115,11 +115,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         const verificationLink = `${window.location.origin}/verify-email?token=${user.id}`;
         
+        console.log('EmailJS Debug Info:', {
+          email: email,
+          fullName: fullName,
+          verificationLink: verificationLink
+        });
+        
         await emailjs.send(
           'service_4z9z1jm',
           'template_35x4p5e',
           {
-            to_email: email,
+            email: email,
             full_name: fullName,
             verification_link: verificationLink,
           }
