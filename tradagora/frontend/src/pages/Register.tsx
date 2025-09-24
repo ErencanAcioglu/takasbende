@@ -8,7 +8,9 @@ import {
   Box,
   Link,
   Alert,
+  Divider,
 } from '@mui/material';
+import { Google } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 
@@ -22,8 +24,13 @@ const Register: React.FC = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState('');
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleRegister = () => {
+    window.location.href = 'https://takasbende.onrender.com/api/auth/google';
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -55,7 +62,14 @@ const Register: React.FC = () => {
         formData.fullName,
         formData.phone || undefined
       );
-      navigate('/dashboard');
+      setSuccess('Kayıt başarılı! E-posta adresinize doğrulama maili gönderildi. Lütfen mailinizi kontrol edin.');
+      setFormData({
+        fullName: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        phone: '',
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -109,6 +123,12 @@ const Register: React.FC = () => {
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
+            </Alert>
+          )}
+
+          {success && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              {success}
             </Alert>
           )}
 
@@ -179,6 +199,23 @@ const Register: React.FC = () => {
             >
               {loading ? 'Kayıt oluşturuluyor...' : 'Kayıt Ol'}
             </Button>
+
+            <Divider sx={{ my: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                veya
+              </Typography>
+            </Divider>
+
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<Google />}
+              onClick={handleGoogleRegister}
+              sx={{ mb: 2 }}
+            >
+              Google ile Kayıt Ol
+            </Button>
+
             <Box textAlign="center">
               <Typography variant="body2">
                 Zaten hesabın var mı?{' '}
