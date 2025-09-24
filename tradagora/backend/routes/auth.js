@@ -3,14 +3,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const supabase = require('../config/supabase');
 const { authenticateToken } = require('../middleware/auth');
-const { Resend } = require('resend');
+// Resend removed - using EmailJS from frontend
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 const router = express.Router();
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// EmailJS used from frontend instead of Resend
 
 // Configure Google OAuth Strategy
 passport.use(new GoogleStrategy({
