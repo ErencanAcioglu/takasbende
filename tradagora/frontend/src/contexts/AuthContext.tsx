@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
+import emailjs from '@emailjs/browser';
 import { API_ENDPOINTS } from '../config/api';
 
 interface User {
@@ -97,6 +98,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const register = async (email: string, password: string, fullName: string, phone?: string) => {
     try {
+      // Backend'e kayıt ol (mail doğrulama olmadan)
       const response = await axios.post(API_ENDPOINTS.AUTH.REGISTER, {
         email,
         password,
@@ -104,14 +106,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         phone,
       });
 
-      const { user, token } = response.data;
-      setUser(user);
-      setToken(token);
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      const { user } = response.data;
+      
+      // EmailJS ile doğrulama maili gönder
+      try {
+        // EmailJS'i başlat
+        emailjs.init('P0uFY5SGHvA_h8Tc1');
+        
+        const verificationLink = `${window.location.origin}/verify-email?token=${user.id}`;
+        
+        await emailjs.send(
+          'service_4z9z1jm',
+          'template_35x4p5e',
+          {
+            email: email,
+            full_name: fullName,
+            verification_link: verificationLink,
+          }
+        );
+        
+        console.log('Verification email sent successfully');
+      } catch (emailError) {
+        console.error('Email sending error:', emailError);
+        // Mail gönderilemese bile kayıt başarılı sayılır
+      }
+      
+      // Kullanıcıyı login yapmadan bırak (mail doğrulama gerekli)
+      throw new Error('Kayıt başarılı! E-posta adresinize doğrulama maili gönderildi. Lütfen mailinizi kontrol edin.');
     } catch (error: any) {
-      throw new Error(error.response?.data?.error || 'Registration failed');
+      throw new Error(error.response?.data?.error || error.message || 'Registration failed');
     }
   };
 

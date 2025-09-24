@@ -124,33 +124,7 @@ router.post('/register', async (req, res) => {
       return res.status(500).json({ error: 'Failed to create user' });
     }
 
-    // Generate verification token
-    const verificationToken = jwt.sign(
-      { id: newUser.id, email: newUser.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    // Send verification email
-    try {
-      await resend.emails.send({
-        from: 'takasbende <noreply@takasbende.com>',
-        to: [email],
-        subject: 'takasbende - E-posta Doğrulama',
-        html: `
-          <h2>Hoş geldiniz ${fullName}!</h2>
-          <p>Hesabınızı doğrulamak için aşağıdaki bağlantıya tıklayın:</p>
-          <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}" 
-             style="background-color: #1976d2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-            E-postamı Doğrula
-          </a>
-          <p>Bu bağlantı 24 saat geçerlidir.</p>
-        `
-      });
-    } catch (emailError) {
-      console.error('Email sending error:', emailError);
-      // Don't fail registration if email fails
-    }
+    // Mail gönderimi frontend'den EmailJS ile yapılacak
 
     res.status(201).json({
       message: 'User created successfully. Please check your email for verification.',
