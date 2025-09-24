@@ -63,6 +63,7 @@ passport.use(new GoogleStrategy({
         google_id: profile.id,
         email: profile.emails[0].value,
         full_name: profile.displayName,
+        password: 'google_oauth_user', // Dummy password for Google users
         is_verified: true,
         created_at: new Date().toISOString()
       }])
