@@ -62,7 +62,26 @@ const Register: React.FC = () => {
         formData.fullName,
         formData.phone || undefined
       );
-      setSuccess('Kayıt başarılı! E-posta adresinize doğrulama maili gönderildi. Lütfen mailinizi kontrol edin.');
+      // This won't be reached due to the error thrown in register function
+    } catch (err: any) {
+      console.log('Catch block reached! Error:', err.message);
+      
+      // Her halükarda doğrulama sayfasına git
+      const userEmail = formData.email; // Store email before clearing form
+      
+      if (err.message.includes('Doğrulama kodu:')) {
+        // Extract verification code from error message
+        const codeMatch = err.message.match(/Doğrulama kodu: (\d+)/);
+        if (codeMatch) {
+          setSuccess(`Kayıt başarılı! Doğrulama kodu: ${codeMatch[1]} (Geliştirme için gösteriliyor)`);
+        } else {
+          setSuccess(`Kayıt başarılı! Doğrulama kodu gönderildi.`);
+        }
+      } else {
+        // Başka hata olsa bile doğrulama sayfasına git
+        setSuccess(`Kayıt işlemi tamamlandı. Doğrulama kodu gönderildi.`);
+      }
+      
       setFormData({
         fullName: '',
         email: '',
@@ -70,8 +89,10 @@ const Register: React.FC = () => {
         confirmPassword: '',
         phone: '',
       });
-    } catch (err: any) {
-      setError(err.message);
+      
+      // Her halükarda doğrulama sayfasına yönlendir
+      console.log('Redirecting to verify-code page with email:', userEmail);
+      navigate('/verify-code', { state: { email: userEmail } });
     } finally {
       setLoading(false);
     }

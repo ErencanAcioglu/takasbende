@@ -106,39 +106,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         phone,
       });
 
-      const { user } = response.data;
+      const { user, verificationCode } = response.data;
       
-      // EmailJS ile doğrulama maili gönder
-      try {
-        // EmailJS'i başlat
-        emailjs.init('P0uFY5SGHvA_h8Tc1');
-        
-        const verificationLink = `${window.location.origin}/verify-email?token=${user.id}`;
-        
-        console.log('EmailJS Debug Info:', {
-          email: email,
-          fullName: fullName,
-          verificationLink: verificationLink
-        });
-        
-        await emailjs.send(
-          'service_4z9z1jm',
-          'template_35x4p5e',
-          {
-            email: email,
-            full_name: fullName,
-            verification_link: verificationLink,
-          }
-        );
-        
-        console.log('Verification email sent successfully');
-      } catch (emailError) {
-        console.error('Email sending error:', emailError);
-        // Mail gönderilemese bile kayıt başarılı sayılır
-      }
+      // Mail göndermeyi kaldır - sadece doğrulama kodu sayfasına yönlendir
       
-      // Kullanıcıyı login yapmadan bırak (mail doğrulama gerekli)
-      throw new Error('Kayıt başarılı! E-posta adresinize doğrulama maili gönderildi. Lütfen mailinizi kontrol edin.');
+      // Kullanıcıyı doğrulama kodu sayfasına yönlendir
+      throw new Error(`Kayıt başarılı! Doğrulama kodu: ${verificationCode} (Geliştirme için gösteriliyor)`);
     } catch (error: any) {
       throw new Error(error.response?.data?.error || error.message || 'Registration failed');
     }

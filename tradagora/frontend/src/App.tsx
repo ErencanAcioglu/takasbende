@@ -12,6 +12,7 @@ import CreateListing from './pages/CreateListing';
 import ListingDetail from './pages/ListingDetail';
 import Profile from './pages/Profile';
 import VerifyEmail from './pages/VerifyEmail';
+import VerifyCode from './pages/VerifyCode';
 import AuthCallback from './pages/AuthCallback';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -127,6 +128,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/verify-code" element={<VerifyCode />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route 
                 path="/dashboard" 
