@@ -3,13 +3,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const supabase = require('../config/supabase');
 const { authenticateToken } = require('../middleware/auth');
-// Resend removed - using EmailJS from frontend
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 const router = express.Router();
-
-// EmailJS used from frontend instead of Resend
 
 // Configure Google OAuth Strategy
 passport.use(new GoogleStrategy({
@@ -80,8 +77,6 @@ passport.use(new GoogleStrategy({
   }
 }));
 
-// No mock users - using Supabase only
-
 // Register
 router.post('/register', async (req, res) => {
   try {
@@ -123,11 +118,6 @@ router.post('/register', async (req, res) => {
       console.error('Supabase insert error:', insertError);
       return res.status(500).json({ error: 'Failed to create user' });
     }
-
-    // Mail doğrulamayı kaldır - sadece doğrulama kodu sayfasına yönlendir
-
-    // Send verification code via EmailJS (frontend will handle this)
-    // The frontend will send the email with the verification code
 
     res.status(201).json({
       message: 'User created successfully. Please enter the verification code sent to your email.',
@@ -399,7 +389,7 @@ router.put('/change-password', authenticateToken, async (req, res) => {
     console.error('Change password error:', error);
     res.status(500).json({ error: 'Failed to change password' });
   }
-
+});
 
 // Google OAuth routes
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
