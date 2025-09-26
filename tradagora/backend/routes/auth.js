@@ -124,10 +124,13 @@ router.post('/register', async (req, res) => {
       return res.status(500).json({ error: 'Failed to create user' });
     }
 
-    // Mail gönderimi frontend'den EmailJS ile yapılacak
+    // Mail doğrulamayı kaldır - sadece doğrulama kodu sayfasına yönlendir
+
+    // Send verification code via EmailJS (frontend will handle this)
+    // The frontend will send the email with the verification code
 
     res.status(201).json({
-      message: 'User created successfully. Please check your email for verification.',
+      message: 'User created successfully. Please enter the verification code sent to your email.',
       user: {
         id: newUser.id,
         email: newUser.email,
@@ -135,7 +138,8 @@ router.post('/register', async (req, res) => {
         phone: newUser.phone,
         created_at: newUser.created_at,
         is_verified: false
-      }
+      },
+      verificationCode: '111111' // For development - remove in production
     });
   } catch (error) {
     console.error('Register error:', error);
@@ -143,42 +147,73 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Verify email
-router.get('/verify-email', async (req, res) => {
+// Verify Code
+router.post('/verify-code', async (req, res) => {
   try {
-    const { token } = req.query;
-
-    if (!token) {
-      return res.status(400).json({ error: 'Verification token is required' });
-    }
-
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const { email, code } = req.body;
     
-    // Update user as verified
-    const { data: user, error: updateError } = await supabase
-      .from('users')
-      .update({ is_verified: true })
-      .eq('id', decoded.id)
-      .select()
-      .single();
+    console.log('Verify code request:', { email, code });
 
-    if (updateError) {
-      return res.status(400).json({ error: 'Invalid or expired token' });
+    // Validate input
+    if (!email || !code) {
+      return res.status(400).json({ error: 'Email and code are required' });
     }
 
-    res.json({
-      message: 'Email verified successfully',
-      user: {
-        id: user.id,
-        email: user.email,
-        full_name: user.full_name,
-        is_verified: true
+    // Geçici olarak herkes için 111111 kabul et
+    if (code === '111111') {
+      console.log('Code is 111111, looking for user with email:', email);
+      
+      // Find user in Supabase
+      const { data: user, error: findError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      console.log('User lookup result:', { user, findError });
+
+      if (findError || !user) {
+        console.log('User not found, returning 400');
+        return res.status(400).json({ error: 'User not found' });
       }
-    });
+
+      // Update user as verified
+      const { data: updatedUser, error: updateError } = await supabase
+        .from('users')
+        .update({ is_verified: true })
+        .eq('id', user.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        return res.status(500).json({ error: 'Failed to verify user' });
+      }
+
+      // Generate JWT token
+      const token = jwt.sign(
+        { id: updatedUser.id, email: updatedUser.email },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      res.json({
+        message: 'Email verified successfully',
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          full_name: updatedUser.full_name,
+          phone: updatedUser.phone,
+          created_at: updatedUser.created_at,
+          is_verified: true
+        },
+        token
+      });
+    } else {
+      return res.status(400).json({ error: 'Invalid verification code' });
+    }
   } catch (error) {
-    console.error('Email verification error:', error);
-    res.status(400).json({ error: 'Invalid or expired token' });
+    console.error('Verify code error:', error);
+    res.status(500).json({ error: 'Failed to verify code' });
   }
 });
 
@@ -364,66 +399,7 @@ router.put('/change-password', authenticateToken, async (req, res) => {
     console.error('Change password error:', error);
     res.status(500).json({ error: 'Failed to change password' });
   }
-});
 
-// Resend verification email
-router.post('/resend-verification', async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
-    }
-
-    // Check if user exists
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, email, full_name, is_verified')
-      .eq('email', email)
-      .single();
-
-    if (userError || !user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    if (user.is_verified) {
-      return res.status(400).json({ error: 'Email is already verified' });
-    }
-
-    // Generate new verification token
-    const verificationToken = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    // Send verification email
-    try {
-      await resend.emails.send({
-        from: 'takasbende <noreply@takasbende.com>',
-        to: [email],
-        subject: 'takasbende - E-posta Doğrulama',
-        html: `
-          <h2>Merhaba ${user.full_name}!</h2>
-          <p>Hesabınızı doğrulamak için aşağıdaki bağlantıya tıklayın:</p>
-          <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}" 
-             style="background-color: #1976d2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-            E-postamı Doğrula
-          </a>
-          <p>Bu bağlantı 24 saat geçerlidir.</p>
-        `
-      });
-
-      res.json({ message: 'Verification email sent successfully' });
-    } catch (emailError) {
-      console.error('Email sending error:', emailError);
-      res.status(500).json({ error: 'Failed to send verification email' });
-    }
-  } catch (error) {
-    console.error('Resend verification error:', error);
-    res.status(500).json({ error: 'Failed to resend verification email' });
-  }
-});
 
 // Google OAuth routes
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));

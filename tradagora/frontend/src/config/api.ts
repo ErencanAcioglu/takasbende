@@ -1,12 +1,13 @@
 const API_BASE_URL = 'https://takasbende.onrender.com';
 
 export const API_ENDPOINTS = {
-  AUTH: {
-    LOGIN: `${API_BASE_URL}/api/auth/login`,
-    REGISTER: `${API_BASE_URL}/api/auth/register`,
-    ME: `${API_BASE_URL}/api/auth/me`,
-    PROFILE: `${API_BASE_URL}/api/auth/profile`,
-  },
+        AUTH: {
+          LOGIN: `${API_BASE_URL}/api/auth/login`,
+          REGISTER: `${API_BASE_URL}/api/auth/register`,
+          ME: `${API_BASE_URL}/api/auth/me`,
+          PROFILE: `${API_BASE_URL}/api/auth/profile`,
+          VERIFY_CODE: `${API_BASE_URL}/api/auth/verify-code`,
+        },
   LISTINGS: {
     BASE: `${API_BASE_URL}/api/listings`,
     BY_ID: (id: string) => `${API_BASE_URL}/api/listings/${id}`,
