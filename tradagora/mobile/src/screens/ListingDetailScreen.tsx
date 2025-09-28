@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -17,13 +18,15 @@ import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { Listing } from '../types';
+import { API_ENDPOINTS } from '../config/api';
+import axios from 'axios';
 
 const { width } = Dimensions.get('window');
 
 interface ListingDetailScreenProps {
   route: {
     params: {
-      listing: Listing;
+      listingId: string;
     };
   };
 }
@@ -32,12 +35,34 @@ type ListingDetailScreenNavigationProp = StackNavigationProp<RootStackParamList,
 
 const ListingDetailScreen: React.FC<ListingDetailScreenProps> = ({ route }) => {
   const navigation = useNavigation<ListingDetailScreenNavigationProp>();
-  const { listing } = route.params;
+  const { listingId } = route.params;
   
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [tradeMessage, setTradeMessage] = useState('');
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+
+  // Fetch listing from API
+  useEffect(() => {
+    const fetchListing = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(API_ENDPOINTS.LISTINGS.BY_ID(listingId));
+        setListing(response.data.listing);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching listing:', err);
+        setError('İlan yüklenirken hata oluştu');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchListing();
+  }, [listingId]);
 
   // Demo kullanıcının ilanları
   const myListings: Listing[] = [
@@ -78,12 +103,41 @@ const ListingDetailScreen: React.FC<ListingDetailScreenProps> = ({ route }) => {
   };
 
   const handleSendMessage = () => {
-    navigation.navigate('Chat', { 
-      messageId: 'new', 
-      listingId: listing.id, 
-      otherUserId: listing.userId 
-    });
+    if (listing) {
+      navigation.navigate('Chat', { 
+        messageId: 'new', 
+        listingId: listing.id, 
+        otherUserId: listing.user_id 
+      });
+    }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2563eb" />
+        <Text style={styles.loadingText}>İlan yükleniyor...</Text>
+      </View>
+    );
+  }
+
+  // Error state
+  if (error || !listing) {
+    return (
+      <View style={styles.errorContainer}>
+        <Ionicons name="alert-circle" size={48} color="#ef4444" />
+        <Text style={styles.errorTitle}>Hata</Text>
+        <Text style={styles.errorText}>{error || 'İlan bulunamadı'}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.retryButtonText}>Geri Dön</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   const handleShare = () => {
     Alert.alert('Paylaş', 'İlan paylaşım özelliği yakında eklenecek!');
@@ -229,12 +283,26 @@ const ListingDetailScreen: React.FC<ListingDetailScreenProps> = ({ route }) => {
         <View style={styles.imageContainer}>
           <Image
             source={{ 
-              uri: (listing.images && listing.images.length > 0 && listing.images[0] && listing.images[0].url) 
-                ? listing.images[0].url 
-                : 'https://via.placeholder.com/400x300' 
+              uri: (() => {
+                try {
+                  if (listing && listing.images && Array.isArray(listing.images) && listing.images.length > 0 && listing.images[0] && listing.images[0].url) {
+                    return listing.images[0].url;
+                  }
+                  return 'https://via.placeholder.com/400x300';
+                } catch (error) {
+                  console.log('Image source error:', error);
+                  return 'https://via.placeholder.com/400x300';
+                }
+              })()
             }}
             style={styles.image}
             resizeMode="cover"
+            onError={(error) => {
+              console.log('Image load error:', error);
+            }}
+            onLoad={() => {
+              console.log('Image loaded successfully');
+            }}
           />
           <TouchableOpacity 
             style={styles.favoriteButton}
@@ -497,6 +565,48 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#64748b',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    padding: 32,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#ef4444',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#64748b',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

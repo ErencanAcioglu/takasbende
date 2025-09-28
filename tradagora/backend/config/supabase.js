@@ -3,10 +3,11 @@ const { createClient } = require('@supabase/supabase-js');
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-// Validate environment variables
+// Check if environment variables are available
 if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing required environment variables: SUPABASE_URL and SUPABASE_ANON_KEY');
+  console.log('⚠️ Supabase environment variables not found, using fallback mode');
+  module.exports = null;
+} else {
+  const supabase = createClient(supabaseUrl, supabaseKey);
+  module.exports = supabase;
 }
-
-const supabase = createClient(supabaseUrl, supabaseKey);
-module.exports = supabase;

@@ -23,6 +23,14 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 
+// Şehir listesi
+const cities = [
+  'İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Antalya', 'Adana', 'Konya', 'Gaziantep',
+  'Mersin', 'Diyarbakır', 'Kayseri', 'Eskişehir', 'Urfa', 'Malatya', 'Erzurum', 'Van',
+  'Batman', 'Elazığ', 'İzmit', 'Manisa', 'Sivas', 'Gebze', 'Balıkesir', 'Kahramanmaraş',
+  'Denizli', 'Samsun', 'Sakarya', 'Uşak', 'Düzce', 'Muğla'
+];
+
 const CreateListing: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
@@ -246,15 +254,23 @@ const CreateListing: React.FC = () => {
               </Box>
 
               <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-                <TextField
-                  fullWidth
-                  id="location"
-                  label="Konum"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="Örn: İstanbul, Kadıköy"
-                />
+                <FormControl fullWidth>
+                  <InputLabel id="location-label">Konum</InputLabel>
+                  <Select
+                    labelId="location-label"
+                    id="location"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleSelectChange}
+                    label="Konum"
+                  >
+                    {cities.map((city) => (
+                      <MenuItem key={city} value={city}>
+                        {city}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
 
                 <TextField
                   required

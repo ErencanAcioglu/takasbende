@@ -71,14 +71,18 @@ router.put('/profile', authenticateToken, async (req, res) => {
 router.get('/listings', authenticateToken, async (req, res) => {
   try {
     const { status = 'active', page = 1, limit = 20 } = req.query;
+    const userId = req.user.id;
 
+    console.log('📥 Getting listings for user:', userId);
+
+    // Get listings from Supabase
     let query = supabase
       .from('listings')
       .select(`
         *,
-        images:listing_images(url, alt_text)
+        user:users(full_name, phone)
       `)
-      .eq('user_id', req.user.id);
+      .eq('user_id', userId);
 
     if (status === 'active') {
       query = query.eq('is_active', true);
@@ -96,16 +100,17 @@ router.get('/listings', authenticateToken, async (req, res) => {
     const { data: listings, error, count } = await query;
 
     if (error) {
+      console.error('Supabase error:', error);
       return res.status(400).json({ error: error.message });
     }
 
     res.json({
-      listings,
+      listings: listings || [],
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
-        total: count,
-        totalPages: Math.ceil(count / limit)
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit)
       }
     });
   } catch (error) {

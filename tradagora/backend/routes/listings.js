@@ -185,9 +185,67 @@ router.get('/', async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
 
-    // Filter mock data
-    let filteredListings = [...mockListings];
+    // Get listings from Supabase database
+    let filteredListings = [];
     
+    try {
+      console.log('📥 Fetching listings from Supabase...');
+      
+      let query = supabase
+        .from('listings')
+        .select(`
+          *,
+          user:users(full_name, phone)
+        `)
+        .eq('is_active', true);
+
+      // Apply filters
+      if (search) {
+        query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,want_item.ilike.%${search}%`);
+      }
+      if (category) {
+        query = query.eq('category', category);
+      }
+      if (location) {
+        query = query.ilike('location', `%${location}%`);
+      }
+
+      // Apply sorting
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+
+      // Apply pagination
+      const from = (page - 1) * limit;
+      const to = from + parseInt(limit) - 1;
+      query = query.range(from, to);
+
+      const { data: supabaseListings, error } = await query;
+
+      if (error) {
+        console.error('❌ Supabase error:', error);
+        throw error;
+      }
+
+      console.log('✅ Fetched listings from Supabase:', supabaseListings?.length || 0);
+      
+      // Add images to each listing
+      filteredListings = (supabaseListings || []).map(listing => ({
+        ...listing,
+        images: [
+          {
+            url: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&h=300&fit=crop',
+            alt_text: listing.title
+          }
+        ]
+      }));
+
+    } catch (supabaseError) {
+      console.error('❌ Failed to fetch from Supabase, using mock data:', supabaseError);
+      
+      // Fallback to mock data if Supabase fails
+      filteredListings = [...mockListings];
+    }
+
+    // Apply filters
     if (search) {
       const searchLower = search.toLowerCase();
       filteredListings = filteredListings.filter(listing => 
@@ -196,21 +254,47 @@ router.get('/', async (req, res) => {
         listing.want_item.toLowerCase().includes(searchLower)
       );
     }
-    
     if (category) {
-      filteredListings = filteredListings.filter(listing => 
-        listing.category === category
-      );
+      filteredListings = filteredListings.filter(listing => listing.category === category);
     }
-    
     if (location) {
-      filteredListings = filteredListings.filter(listing => 
-        listing.location.toLowerCase().includes(location.toLowerCase())
-      );
+      filteredListings = filteredListings.filter(listing => listing.location.toLowerCase().includes(location.toLowerCase()));
     }
 
-    res.json({
-      listings: filteredListings,
+    // Apply sorting
+    filteredListings.sort((a, b) => {
+      const aVal = a[sortBy];
+      const bVal = b[sortBy];
+      if (sortOrder === 'asc') {
+        return aVal > bVal ? 1 : -1;
+      } else {
+        return aVal < bVal ? 1 : -1;
+      }
+    });
+
+    // Apply pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + parseInt(limit);
+    const paginatedListings = filteredListings.slice(startIndex, endIndex);
+
+    // Update image URLs based on request origin
+    const origin = req.get('origin') || req.get('referer') || '';
+    let baseUrl = 'http://172.20.10.11:5001'; // Default for mobile
+    
+    if (origin.includes('localhost:3000')) {
+      baseUrl = 'http://localhost:5001'; // For web
+    }
+
+    const listingsWithCorrectUrls = paginatedListings.map(listing => ({
+      ...listing,
+      images: listing.images ? listing.images.map(img => ({
+        ...img,
+        url: img.url.replace(/http:\/\/[^\/]+/, baseUrl)
+      })) : []
+    }));
+
+    res.json({ 
+      listings: listingsWithCorrectUrls,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -229,14 +313,69 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Find in mock data
-    const listing = mockListings.find(l => l.id === id);
+    // Get listing from Supabase database
+    let listing = null;
+    
+    try {
+      console.log('📥 Fetching listing from Supabase:', id);
+      
+      const { data, error } = await supabase
+        .from('listings')
+        .select(`
+          *,
+          user:users(full_name, phone)
+        `)
+        .eq('id', id)
+        .eq('is_active', true)
+        .single();
+
+      if (error) {
+        console.error('❌ Supabase error:', error);
+        throw error;
+      }
+
+      if (data) {
+        listing = {
+          ...data,
+          images: [
+            {
+              url: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&h=300&fit=crop',
+              alt_text: data.title
+            }
+          ]
+        };
+        console.log('✅ Fetched listing from Supabase:', listing.title);
+      }
+
+    } catch (supabaseError) {
+      console.error('❌ Failed to fetch from Supabase, checking memory:', supabaseError);
+      
+      // Fallback to memory if Supabase fails
+      const allListings = [...mockListings];
+      listing = allListings.find(l => l.id === id);
+    }
     
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
     }
 
-    res.json({ listing });
+    // Update image URLs based on request origin
+    const origin = req.get('origin') || req.get('referer') || '';
+    let baseUrl = 'http://172.20.10.11:5001'; // Default for mobile
+    
+    if (origin.includes('localhost:3000')) {
+      baseUrl = 'http://localhost:5001'; // For web
+    }
+
+    const listingWithCorrectUrls = {
+      ...listing,
+      images: listing.images ? listing.images.map(img => ({
+        ...img,
+        url: img.url.replace(/http:\/\/[^\/]+/, baseUrl)
+      })) : []
+    };
+
+    res.json({ listing: listingWithCorrectUrls });
   } catch (error) {
     console.error('Error fetching listing:', error);
     res.status(500).json({ error: 'Failed to fetch listing' });
@@ -247,27 +386,46 @@ router.get('/:id', async (req, res) => {
 router.post('/', authenticateToken, upload.array('images', 5), async (req, res) => {
   try {
     const { title, description, category, condition, location, wantItem, wantDescription } = req.body;
+    const userId = req.user.id;
     const user_id = req.user.id;
+    
+    console.log('📥 Received listing data:', {
+      title, description, category, condition, location, wantItem, wantDescription,
+      userId, filesCount: req.files ? req.files.length : 0
+    });
 
     // Validate required fields
     if (!title || !description || !category || !wantItem) {
+      console.log('Missing fields:', { title, description, category, wantItem });
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
     // Handle uploaded images
     const images = [];
     if (req.files && req.files.length > 0) {
+      // Determine base URL based on request origin
+      const origin = req.get('origin') || req.get('referer') || '';
+      let baseUrl = 'http://172.20.10.11:5001'; // Default for mobile
+      
+      if (origin.includes('localhost:3000')) {
+        baseUrl = 'http://localhost:5001'; // For web
+      }
+      
       req.files.forEach(file => {
         images.push({
-          url: `/uploads/listings/${file.filename}`,
+          url: `${baseUrl}/uploads/listings/${file.filename}`,
           alt_text: file.originalname
         });
       });
     }
 
+    // Generate UUID for Supabase
+    const { v4: uuidv4 } = require('uuid');
+    const listingId = uuidv4();
+    
     // Create new listing (mock)
     const newListing = {
-      id: Date.now().toString(),
+      id: listingId,
       title,
       description,
       category,
@@ -284,13 +442,84 @@ router.post('/', authenticateToken, upload.array('images', 5), async (req, res) 
       images: images
     };
 
-    // Add to mock data
-    mockListings.unshift(newListing);
+    // Save to memory (real data, not mock)
+    console.log('💾 Saving listing to memory...');
+    
+    // Update the existing newListing object
+    // newListing.id already set to UUID above
+    newListing.want_item = wantItem;
+    newListing.want_description = wantDescription;
+    newListing.is_active = true;
+    newListing.user_id = userId;
+    newListing.created_at = new Date().toISOString();
+    newListing.updated_at = new Date().toISOString();
+    newListing.images = images.length > 0 ? images : [{
+      url: 'https://via.placeholder.com/400x300?text=No+Image',
+      alt_text: 'No image available'
+    }];
 
-    res.status(201).json({ 
-      message: 'Listing created successfully',
-      listing: newListing 
-    });
+    // Save to Supabase database
+    if (supabase) {
+      try {
+        console.log('💾 Saving listing to Supabase database...');
+        
+        const { data, error } = await supabase
+        .from('listings')
+        .insert([
+          {
+            id: newListing.id,
+            title: newListing.title,
+            description: newListing.description,
+            category: newListing.category,
+            condition: newListing.condition,
+            location: newListing.location,
+            want_item: newListing.want_item,
+            want_description: newListing.want_description,
+            is_active: newListing.is_active,
+            user_id: newListing.user_id,
+            created_at: newListing.created_at,
+            updated_at: newListing.updated_at
+          }
+        ])
+        .select();
+
+      if (error) {
+        console.error('❌ Supabase error:', error);
+        throw error;
+      }
+
+      console.log('✅ Listing saved to Supabase:', data);
+
+      // Also save to memory for immediate access
+      mockListings.unshift(newListing);
+
+      res.status(201).json({ 
+        message: 'Listing created successfully',
+        listing: newListing 
+      });
+
+    } catch (supabaseError) {
+      console.error('❌ Failed to save to Supabase, saving to memory only:', supabaseError);
+      
+      // Fallback to memory if Supabase fails
+      mockListings.unshift(newListing);
+      
+      res.status(201).json({ 
+        message: 'Listing created successfully (saved to memory)',
+        listing: newListing 
+      });
+    }
+    } else {
+      console.log('⚠️ Supabase not available, saving to memory only');
+      
+      // Save to memory only
+      mockListings.unshift(newListing);
+      
+      res.status(201).json({ 
+        message: 'Listing created successfully (saved to memory)',
+        listing: newListing 
+      });
+    }
   } catch (error) {
     console.error('Error creating listing:', error);
     res.status(500).json({ error: 'Failed to create listing' });

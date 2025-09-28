@@ -149,7 +149,10 @@ const MyListingsScreen: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>İlanlarım</Text>
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity 
+          style={styles.addButton}
+          onPress={() => navigation.navigate('CreateListing' as any)}
+        >
           <Ionicons name="add" size={24} color="#ffffff" />
         </TouchableOpacity>
       </View>
@@ -165,16 +168,26 @@ const MyListingsScreen: React.FC = () => {
             listings.map(renderListing)
           ) : (
             <View style={styles.emptyContainer}>
-              <Ionicons name="list-outline" size={64} color="#94a3b8" />
-              <Text style={styles.emptyTitle}>Henüz ilanınız yok</Text>
+              <View style={styles.emptyIconContainer}>
+                <Ionicons name="add-circle-outline" size={80} color="#2563eb" />
+              </View>
+              <Text style={styles.emptyTitle}>İlk ilanınızı oluşturun!</Text>
               <Text style={styles.emptyDescription}>
-                İlk ilanınızı oluşturmak için aşağıdaki butona tıklayın
+                Takas yapmak istediğiniz ürünü paylaşın ve başkalarıyla takas edin
               </Text>
-              <Button
-                title="İlan Oluştur"
-                onPress={() => {}}
-                style={styles.createButton}
-              />
+              <View style={styles.emptyActions}>
+                <Button
+                  title="İlan Oluştur"
+                  onPress={() => navigation.navigate('CreateListing' as any)}
+                  style={styles.createButton}
+                />
+                <TouchableOpacity 
+                  style={styles.helpButton}
+                  onPress={() => Alert.alert('Yardım', 'İlan oluşturma konusunda yardım almak için destek ekibimizle iletişime geçin.')}
+                >
+                  <Text style={styles.helpButtonText}>Nasıl ilan oluşturulur?</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         </View>
@@ -313,25 +326,48 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    paddingVertical: 48,
+    paddingHorizontal: 24,
+  },
+  emptyIconContainer: {
+    marginBottom: 24,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: '700',
     color: '#1e293b',
-    marginTop: 16,
-    marginBottom: 8,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   emptyDescription: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#64748b',
     textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 20,
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  emptyActions: {
+    width: '100%',
+    alignItems: 'center',
   },
   createButton: {
-    width: '100%',
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 32,
+    marginBottom: 16,
+    minWidth: 200,
+  },
+  helpButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+  },
+  helpButtonText: {
+    fontSize: 14,
+    color: '#2563eb',
+    fontWeight: '500',
+    textDecorationLine: 'underline',
   },
 });
 

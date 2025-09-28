@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://takasbende.onrender.com';
+const API_BASE_URL = 'http://localhost:5001';
 
 export const API_ENDPOINTS = {
         AUTH: {

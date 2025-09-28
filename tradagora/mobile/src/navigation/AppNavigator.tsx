@@ -20,6 +20,7 @@ import MessagesScreen from '../screens/MessagesScreen';
 import ChatScreen from '../screens/ChatScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import HelpScreen from '../screens/HelpScreen';
+import CreateListingScreen from '../screens/CreateListingScreen';
 import LoadingScreen from '../screens/LoadingScreen';
 
 export type RootStackParamList = {
@@ -35,6 +36,7 @@ export type RootStackParamList = {
   Chat: { messageId: string; listingId: string; otherUserId: string };
   Settings: undefined;
   Help: undefined;
+  CreateListing: undefined;
 };
 
 export type MainTabParamList = {
@@ -131,9 +133,10 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="Favorites" component={FavoritesScreen} />
             <Stack.Screen name="Messages" component={MessagesScreen} />
-            <Stack.Screen name="Chat" component={ChatScreen} />
-            <Stack.Screen name="Settings" component={SettingsScreen} />
-            <Stack.Screen name="Help" component={HelpScreen} />
+                <Stack.Screen name="Chat" component={ChatScreen} />
+                <Stack.Screen name="Settings" component={SettingsScreen} />
+                <Stack.Screen name="Help" component={HelpScreen} />
+                <Stack.Screen name="CreateListing" component={CreateListingScreen} />
           </>
         ) : (
           <>

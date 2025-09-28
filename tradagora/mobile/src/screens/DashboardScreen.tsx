@@ -102,15 +102,31 @@ const DashboardScreen: React.FC = () => {
       </View>
       
       {/* İlan fotoğrafı */}
-      {listing.images && listing.images.length > 0 && listing.images[0] && listing.images[0].url && (
-        <View style={styles.listingImageContainer}>
-          <Image 
-            source={{ uri: listing.images[0].url }} 
-            style={styles.listingImage}
-            resizeMode="cover"
-          />
-        </View>
-      )}
+      {(() => {
+        try {
+          if (listing && listing.images && Array.isArray(listing.images) && listing.images.length > 0 && listing.images[0] && listing.images[0].url) {
+            return (
+              <View style={styles.listingImageContainer}>
+                <Image 
+                  source={{ uri: listing.images[0].url }} 
+                  style={styles.listingImage}
+                  resizeMode="cover"
+                  onError={(error) => {
+                    console.log('Image load error:', error);
+                  }}
+                  onLoad={() => {
+                    console.log('Image loaded successfully');
+                  }}
+                />
+              </View>
+            );
+          }
+          return null;
+        } catch (error) {
+          console.log('Image rendering error:', error);
+          return null;
+        }
+      })()}
       
       <Text style={styles.listingDescription}>{listing.description}</Text>
       
@@ -164,9 +180,17 @@ const DashboardScreen: React.FC = () => {
           <Text style={styles.greeting}>Merhaba,</Text>
           <Text style={styles.userName}>{user?.fullName}</Text>
         </View>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Ionicons name="log-out-outline" size={24} color="#64748b" />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            style={styles.headerButton}
+            onPress={() => navigation.navigate('Search' as any)}
+          >
+            <Ionicons name="search-outline" size={24} color="#64748b" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <Ionicons name="log-out-outline" size={24} color="#64748b" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.content}>
@@ -182,22 +206,24 @@ const DashboardScreen: React.FC = () => {
 
         <View style={styles.actions}>
           <Button
-            title="İlan Oluştur"
-            onPress={() => {}}
-            style={styles.actionButton}
+            title="+ İlan Oluştur"
+            onPress={() => navigation.navigate('CreateListing')}
+            style={styles.primaryActionButton}
           />
-          <Button
-            title="İlanlarım"
-            onPress={() => navigation.navigate('MyListings')}
-            variant="outline"
-            style={styles.actionButton}
-          />
-          <Button
-            title="Takaslarım"
-            onPress={() => navigation.navigate('MyTrades')}
-            variant="outline"
-            style={styles.actionButton}
-          />
+          <View style={styles.secondaryActions}>
+            <Button
+              title="İlanlarım"
+              onPress={() => navigation.navigate('MyListings')}
+              variant="outline"
+              style={styles.secondaryActionButton}
+            />
+            <Button
+              title="Takaslarım"
+              onPress={() => navigation.navigate('MyTrades')}
+              variant="outline"
+              style={styles.secondaryActionButton}
+            />
+          </View>
         </View>
 
         <Card style={styles.statsCard}>
@@ -277,6 +303,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1e293b',
   },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  headerButton: {
+    padding: 8,
+  },
   logoutButton: {
     padding: 8,
   },
@@ -310,10 +343,18 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   actions: {
+    gap: 16,
+  },
+  primaryActionButton: {
+    backgroundColor: '#2563eb',
+    paddingVertical: 16,
+  },
+  secondaryActions: {
+    flexDirection: 'row',
     gap: 12,
   },
-  actionButton: {
-    width: '100%',
+  secondaryActionButton: {
+    flex: 1,
   },
   statsCard: {
     paddingVertical: 24,
