@@ -83,8 +83,13 @@ router.post('/register', async (req, res) => {
     const { email, password, fullName, phone } = req.body;
 
     // Validate input
-    if (!email || !password || !fullName) {
-      return res.status(400).json({ error: 'Email, password and full name are required' });
+    if (!email || !password || !fullName || !phone) {
+      return res.status(400).json({ error: 'Email, password, full name and phone are required' });
+    }
+
+    // Validate phone format
+    if (!/^\+90\s?5\d{2}\s?\d{3}\s?\d{2}\s?\d{2}$/.test(phone)) {
+      return res.status(400).json({ error: 'Invalid phone number format. Use +90 5XX XXX XX XX' });
     }
 
     // Check if user already exists in Supabase
@@ -119,16 +124,28 @@ router.post('/register', async (req, res) => {
       return res.status(500).json({ error: 'Failed to create user' });
     }
 
+    // Generate JWT token
+    const jwt = require('jsonwebtoken');
+    const token = jwt.sign(
+      { 
+        id: newUser.id, 
+        email: newUser.email 
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '7d' }
+    );
+
     res.status(201).json({
-      message: 'User created successfully. Please enter the verification code sent to your email.',
+      message: 'User created successfully.',
       user: {
         id: newUser.id,
         email: newUser.email,
-        full_name: newUser.full_name,
+        fullName: newUser.full_name,
         phone: newUser.phone,
-        created_at: newUser.created_at,
-        is_verified: false
+        createdAt: newUser.created_at,
+        isVerified: false
       },
+      token: token,
       verificationCode: '111111' // For development - remove in production
     });
   } catch (error) {

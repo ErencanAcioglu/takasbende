@@ -4,6 +4,17 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Get all offers
+router.get('/', authenticateToken, async (req, res) => {
+  try {
+    // Offers tablosu henüz yok, boş array döndür
+    res.json([]);
+  } catch (error) {
+    console.error('Get offers error:', error);
+    res.status(500).json({ error: 'Failed to fetch offers' });
+  }
+});
+
 // Mock data for offers and listings (for development)
 const mockOffers = [];
 const mockListings = [

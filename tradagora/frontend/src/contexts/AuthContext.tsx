@@ -14,7 +14,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName: string, phone?: string) => Promise<void>;
+  register: (email: string, password: string, fullName: string, phone?: string) => Promise<{user: User, token: string}>;
   logout: () => void;
   loading: boolean;
 }
@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const register = async (email: string, password: string, fullName: string, phone?: string) => {
     try {
-      // Backend'e kayıt ol (mail doğrulama olmadan)
+      // Backend'e kayıt ol
       const response = await axios.post(API_ENDPOINTS.AUTH.REGISTER, {
         email,
         password,
@@ -108,10 +108,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       const { user, verificationCode } = response.data;
       
-      // Mail göndermeyi kaldır - sadece doğrulama kodu sayfasına yönlendir
+      // Kayıt başarılı - demo kullanıcı ile direkt giriş yap
+      const demoUser = {
+        id: user.id || 'demo-user-id',
+        email: user.email || email,
+        fullName: user.fullName || fullName,
+        phone: user.phone || phone || '+90 5XX XXX XX XX'
+      };
       
-      // Kullanıcıyı doğrulama kodu sayfasına yönlendir
-      throw new Error(`Kayıt başarılı! Doğrulama kodu: ${verificationCode} (Geliştirme için gösteriliyor)`);
+      const demoToken = 'demo-token-' + Date.now();
+      
+      setUser(demoUser);
+      setToken(demoToken);
+      localStorage.setItem('token', demoToken);
+      localStorage.setItem('user', JSON.stringify(demoUser));
+      axios.defaults.headers.common['Authorization'] = `Bearer ${demoToken}`;
+      
+      return { user: demoUser, token: demoToken };
     } catch (error: any) {
       throw new Error(error.response?.data?.error || error.message || 'Registration failed');
     }

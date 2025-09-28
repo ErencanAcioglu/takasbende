@@ -16,8 +16,12 @@ app.use(helmet());
 app.use(cors({
   origin: [
     'http://localhost:3000',
+    'http://172.20.10.11:3000',
     'https://takasbende.vercel.app',
-    'https://takasbende-qzy0ov3ed-erencan-acioglus-projects.vercel.app'
+    'https://takasbende-qzy0ov3ed-erencan-acioglus-projects.vercel.app',
+    /^exp:\/\/.*/, // Expo development URLs
+    /^http:\/\/.*:8081$/, // Expo web URLs
+    /^http:\/\/.*:19006$/ // Expo web URLs
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -56,9 +60,9 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 
 // Production routes (Supabase)
-app.use('/api/listings', require('./routes/listings_production'));
-app.use('/api/offers', require('./routes/offers_production'));
-app.use('/api/messages', require('./routes/messages_production'));
+app.use('/api/listings', require('./routes/listings'));
+app.use('/api/offers', require('./routes/offers'));
+app.use('/api/messages', require('./routes/messages'));
 
 // Matching routes (AI)
 app.use('/api/matching', require('./routes/matching'));

@@ -53,6 +53,16 @@ const Register: React.FC = () => {
       return;
     }
 
+    if (!formData.phone.trim()) {
+      setError('Telefon numarası gerekli');
+      return;
+    }
+
+    if (!/^\+90\s?5\d{2}\s?\d{3}\s?\d{2}\s?\d{2}$/.test(formData.phone)) {
+      setError('Geçerli bir telefon numarası girin (+90 5XX XXX XX XX)');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -60,7 +70,7 @@ const Register: React.FC = () => {
         formData.email,
         formData.password,
         formData.fullName,
-        formData.phone || undefined
+        formData.phone
       );
       // This won't be reached due to the error thrown in register function
     } catch (err: any) {
@@ -78,8 +88,13 @@ const Register: React.FC = () => {
           setSuccess(`Kayıt başarılı! Doğrulama kodu gönderildi.`);
         }
       } else {
-        // Başka hata olsa bile doğrulama sayfasına git
-        setSuccess(`Kayıt işlemi tamamlandı. Doğrulama kodu gönderildi.`);
+        // Kayıt başarılı - kullanıcı otomatik giriş yaptı
+        setSuccess(`Hesabınız oluşturuldu ve giriş yapıldı. Dashboard'a yönlendiriliyorsunuz.`);
+        
+        // Dashboard'a yönlendir
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
       }
       
       setFormData({
@@ -89,10 +104,6 @@ const Register: React.FC = () => {
         confirmPassword: '',
         phone: '',
       });
-      
-      // Her halükarda doğrulama sayfasına yönlendir
-      console.log('Redirecting to verify-code page with email:', userEmail);
-      navigate('/verify-code', { state: { email: userEmail } });
     } finally {
       setLoading(false);
     }
@@ -182,7 +193,7 @@ const Register: React.FC = () => {
               margin="normal"
               fullWidth
               id="phone"
-              label="Telefon (Opsiyonel)"
+              label="Telefon"
               name="phone"
               autoComplete="tel"
               value={formData.phone}
